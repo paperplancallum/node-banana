@@ -961,12 +961,14 @@ export function WorkflowCanvas() {
           sourceHandleIdForNewNode = handleType;
         }
       } else if (nodeType === "switch") {
-        // Switch accepts any type on generic-input, outputs match that type
-        targetHandleId = "generic-input";
+        // Switch input: use the actual type so the edge stores the correct handle type
+        // (onConnect bypasses resolveSwitchHandle, so we must resolve here)
+        targetHandleId = handleType || "generic-input";
+        if (handleType) {
+          updateNodeData(newNodeId, { inputType: handleType as HandleType });
+        }
         // Switch outputs use dynamic handle IDs (switch entry IDs)
-        // For connection purposes, we'll connect to the first switch output
-        // The resolveSwitchHandle will update inputType when input connects
-        sourceHandleIdForNewNode = null; // Switch outputs are dynamic, no static handle ID
+        sourceHandleIdForNewNode = null;
       } else if (handleType === "image") {
         if (nodeType === "annotation" || nodeType === "output" || nodeType === "splitGrid" || nodeType === "outputGallery" || nodeType === "imageCompare") {
           targetHandleId = "image";

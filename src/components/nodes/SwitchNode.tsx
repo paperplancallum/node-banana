@@ -26,7 +26,10 @@ export const SwitchNode = memo(({ id, data, selected }: NodeProps<WorkflowNode>)
   // Derive inputType from incoming edge connection
   const derivedInputType = useMemo(() => {
     const inputEdge = edges.find((e) => e.target === id);
-    return inputEdge?.targetHandle as HandleType | undefined;
+    const handle = inputEdge?.targetHandle;
+    // "generic-input" means the edge hasn't been resolved to a real type yet
+    if (!handle || handle === "generic-input") return undefined;
+    return handle as HandleType;
   }, [edges, id]);
 
   // Update stored inputType when derived type changes
