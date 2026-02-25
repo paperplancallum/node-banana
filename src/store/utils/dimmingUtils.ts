@@ -32,32 +32,46 @@ export function computeDimmedNodes(
     });
   });
 
-  // Step 2: Smart cascade — remove nodes that have at least one active input
-  // A node stays active if any incoming edge comes from a source NOT in potentiallyDimmed
-  // AND that source is not a Switch with a disabled output pointing to this node
+  // Step 2: Type-aware smart cascade — only un-dim if an active input replaces
+  // the SAME data type that was blocked by the disabled Switch output.
+  // e.g. a Prompt (text) does NOT rescue a node whose image input is disabled.
   const finalDimmed = new Set<string>();
 
   potentiallyDimmed.forEach(nodeId => {
     const incomingEdges = edges.filter(e => e.target === nodeId);
 
-    // Check if any incoming edge provides an active path
-    const hasActiveInput = incomingEdges.some(edge => {
-      // Source is not potentially dimmed — it's an active source
-      if (!potentiallyDimmed.has(edge.source)) {
-        // But also check: is this edge coming from a disabled Switch output?
-        const sourceNode = nodes.find(n => n.id === edge.source);
-        if (sourceNode?.type === "switch") {
-          const switchData = sourceNode.data as SwitchNodeData;
-          const switchEntry = switchData.switches?.find(s => s.id === edge.sourceHandle);
-          // If this specific switch output is disabled, it's not an active path
-          if (switchEntry && !switchEntry.enabled) return false;
+    // Collect which handle types are blocked on this node
+    // (from disabled Switch outputs or from transitively dimmed sources)
+    const blockedTypes = new Set<string>();
+    incomingEdges.forEach(edge => {
+      const sourceNode = nodes.find(n => n.id === edge.source);
+      if (sourceNode?.type === "switch") {
+        const switchData = sourceNode.data as SwitchNodeData;
+        const switchEntry = switchData.switches?.find(s => s.id === edge.sourceHandle);
+        if (switchEntry && !switchEntry.enabled && edge.targetHandle) {
+          blockedTypes.add(edge.targetHandle);
         }
-        return true; // Active source, not dimmed
+      } else if (potentiallyDimmed.has(edge.source) && edge.targetHandle) {
+        blockedTypes.add(edge.targetHandle);
       }
-      return false; // Source is also dimmed
     });
 
-    if (!hasActiveInput) {
+    // Check if any active input provides the same type as a blocked type
+    const hasReplacementInput = incomingEdges.some(edge => {
+      // Skip dimmed sources
+      if (potentiallyDimmed.has(edge.source)) return false;
+      // Skip disabled Switch outputs
+      const sourceNode = nodes.find(n => n.id === edge.source);
+      if (sourceNode?.type === "switch") {
+        const switchData = sourceNode.data as SwitchNodeData;
+        const switchEntry = switchData.switches?.find(s => s.id === edge.sourceHandle);
+        if (switchEntry && !switchEntry.enabled) return false;
+      }
+      // Active input — only counts if it provides a blocked type
+      return edge.targetHandle ? blockedTypes.has(edge.targetHandle) : false;
+    });
+
+    if (!hasReplacementInput) {
       finalDimmed.add(nodeId);
     }
   });
