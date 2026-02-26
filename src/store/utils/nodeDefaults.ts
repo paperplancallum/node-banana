@@ -20,6 +20,7 @@ import {
   VideoFrameGrabNodeData,
   RouterNodeData,
   SwitchNodeData,
+  ConditionalSwitchNodeData,
   GLBViewerNodeData,
   WorkflowNodeData,
   GroupColor,
@@ -53,6 +54,7 @@ export const defaultNodeDimensions: Record<NodeType, { width: number; height: nu
   videoFrameGrab: { width: 320, height: 320 },
   router: { width: 200, height: 80 },
   switch: { width: 220, height: 120 },
+  conditionalSwitch: { width: 260, height: 180 },
   glbViewer: { width: 360, height: 380 },
 };
 
@@ -296,6 +298,21 @@ export const createDefaultNodeData = (type: NodeType): WorkflowNodeData => {
           { id: Math.random().toString(36).slice(2, 9), name: "Output 1", enabled: true }
         ]
       } as SwitchNodeData;
+    case "conditionalSwitch":
+      return {
+        customTitle: null,
+        comment: null,
+        incomingText: null,
+        rules: [
+          {
+            id: "rule-" + Math.random().toString(36).slice(2, 9),
+            value: "",
+            mode: "contains",
+            label: "Rule 1",
+            isMatched: false,
+          }
+        ]
+      } as ConditionalSwitchNodeData;
     case "glbViewer":
       return {
         glbUrl: null,

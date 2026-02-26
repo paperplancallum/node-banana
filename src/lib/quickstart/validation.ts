@@ -33,6 +33,7 @@ const VALID_NODE_TYPES: NodeType[] = [
   "videoFrameGrab",
   "router",
   "switch",
+  "conditionalSwitch",
   "glbViewer",
 ];
 
@@ -61,6 +62,7 @@ const DEFAULT_DIMENSIONS: Record<NodeType, { width: number; height: number }> = 
   videoFrameGrab: { width: 320, height: 320 },
   router: { width: 200, height: 80 },
   switch: { width: 220, height: 120 },
+  conditionalSwitch: { width: 260, height: 180 },
   glbViewer: { width: 360, height: 380 },
 };
 

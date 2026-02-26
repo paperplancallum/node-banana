@@ -43,6 +43,7 @@ export type NodeType =
   | "videoFrameGrab"
   | "router"
   | "switch"
+  | "conditionalSwitch"
   | "generate3d"
   | "glbViewer";
 
@@ -371,6 +372,30 @@ export interface SwitchNodeData extends BaseNodeData {
 }
 
 /**
+ * Match mode for conditional switch rules
+ */
+export type MatchMode = "exact" | "contains" | "starts-with" | "ends-with";
+
+/**
+ * Conditional switch rule for text-based routing
+ */
+export interface ConditionalSwitchRule {
+  id: string;           // Unique handle ID, prefixed with "rule-" to avoid collision with reserved "default" keyword
+  value: string;        // Comma-separated match values
+  mode: MatchMode;      // Match strategy
+  label: string;        // User-editable display name
+  isMatched: boolean;   // Computed match state
+}
+
+/**
+ * Conditional Switch node - text-based routing with multi-mode matching
+ */
+export interface ConditionalSwitchNodeData extends BaseNodeData {
+  incomingText: string | null;  // Upstream text for evaluation and display
+  rules: ConditionalSwitchRule[]; // User-defined rules
+}
+
+/**
  * Split Grid node - splits image into grid cells for parallel processing
  */
 export interface SplitGridNodeData extends BaseNodeData {
@@ -430,6 +455,7 @@ export type WorkflowNodeData =
   | VideoFrameGrabNodeData
   | RouterNodeData
   | SwitchNodeData
+  | ConditionalSwitchNodeData
   | GLBViewerNodeData;
 
 /**

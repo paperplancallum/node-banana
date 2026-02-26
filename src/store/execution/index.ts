@@ -19,6 +19,7 @@ export {
   executeGlbViewer,
   executeRouter,
   executeSwitch,
+  executeConditionalSwitch,
 } from "./simpleNodeExecutors";
 
 export { executeNanoBanana } from "./nanoBananaExecutor";

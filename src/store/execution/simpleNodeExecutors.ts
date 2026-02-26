@@ -338,6 +338,17 @@ export async function executeSwitch(ctx: NodeExecutionContext): Promise<void> {
 }
 
 /**
+ * ConditionalSwitch node: pure passthrough with text-based rule matching.
+ */
+export async function executeConditionalSwitch(ctx: NodeExecutionContext): Promise<void> {
+  // ConditionalSwitch is pure passthrough — actual text matching happens during connectedInputs traversal.
+  // Brief status flash to show execution occurred.
+  ctx.updateNodeData(ctx.node.id, { status: "loading" });
+  await new Promise(resolve => setTimeout(resolve, 50));
+  ctx.updateNodeData(ctx.node.id, { status: "complete" });
+}
+
+/**
  * GLB Viewer node: receives 3D model URL from upstream, fetches and loads it.
  */
 export async function executeGlbViewer(ctx: NodeExecutionContext): Promise<void> {
