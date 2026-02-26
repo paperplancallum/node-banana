@@ -80,10 +80,47 @@ import {
   executeGlbViewer,
   executeRouter,
   executeSwitch,
+  executeConditionalSwitch,
 } from "./execution";
 import type { NodeExecutionContext } from "./execution";
 export type { LevelGroup } from "./utils/executionUtils";
 export { CONCURRENCY_SETTINGS_KEY } from "./utils/executionUtils";
+
+/**
+ * Evaluates a rule against incoming text with the specified match mode.
+ * Returns true if any comma-separated value matches using OR logic.
+ */
+function evaluateRuleMatch(text: string | null, ruleValue: string, mode: "exact" | "contains" | "starts-with" | "ends-with"): boolean {
+  // Guard: no match if text or ruleValue is empty
+  if (!text || !ruleValue) return false;
+
+  // Normalize text
+  const normalizedText = text.toLowerCase().trim();
+
+  // Split and normalize rule values (comma-separated)
+  const values = ruleValue
+    .split(',')
+    .map(v => v.toLowerCase().trim())
+    .filter(v => v.length > 0);
+
+  if (values.length === 0) return false;
+
+  // OR logic: match if ANY value matches
+  return values.some(value => {
+    switch (mode) {
+      case "exact":
+        return normalizedText === value;
+      case "contains":
+        return normalizedText.includes(value);
+      case "starts-with":
+        return normalizedText.startsWith(value);
+      case "ends-with":
+        return normalizedText.endsWith(value);
+      default:
+        return false;
+    }
+  });
+}
 
 function saveLogSession(): void {
   const session = logger.getCurrentSession();
@@ -1050,6 +1087,28 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
           case "switch":
             await executeSwitch(executionCtx);
             break;
+          case "conditionalSwitch": {
+            // Before executing, compute fresh match status from incoming text
+            const condInputs = get().getConnectedInputs(node.id);
+            const incomingText = condInputs.text;
+            const nodeData = node.data as { rules: Array<{ id: string; value: string; mode: string; label: string; isMatched: boolean }> };
+
+            // Evaluate each rule against incoming text
+            const updatedRules = nodeData.rules.map(rule => {
+              const isMatched = evaluateRuleMatch(incomingText, rule.value, rule.mode as "exact" | "contains" | "starts-with" | "ends-with");
+              return { ...rule, isMatched };
+            });
+
+            // Update node data with fresh match status
+            get().updateNodeData(node.id, {
+              incomingText,
+              rules: updatedRules,
+            });
+
+            // Then execute the node (status flash)
+            await executeConditionalSwitch(executionCtx);
+            break;
+          }
         }
     }; // End of executeSingleNode helper
 
@@ -1374,6 +1433,28 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
         case "switch":
           await executeSwitch(executionCtx);
           break;
+        case "conditionalSwitch": {
+          // Before executing, compute fresh match status from incoming text
+          const condInputs = get().getConnectedInputs(node.id);
+          const incomingText = condInputs.text;
+          const nodeData = node.data as { rules: Array<{ id: string; value: string; mode: string; label: string; isMatched: boolean }> };
+
+          // Evaluate each rule against incoming text
+          const updatedRules = nodeData.rules.map(rule => {
+            const isMatched = evaluateRuleMatch(incomingText, rule.value, rule.mode as "exact" | "contains" | "starts-with" | "ends-with");
+            return { ...rule, isMatched };
+          });
+
+          // Update node data with fresh match status
+          get().updateNodeData(node.id, {
+            incomingText,
+            rules: updatedRules,
+          });
+
+          // Then execute the node (status flash)
+          await executeConditionalSwitch(executionCtx);
+          break;
+        }
       }
     };
 

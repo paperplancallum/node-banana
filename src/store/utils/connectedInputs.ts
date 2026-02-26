@@ -25,6 +25,8 @@ import {
   LLMGenerateNodeData,
   GLBViewerNodeData,
   SwitchNodeData,
+  ConditionalSwitchNodeData,
+  MatchMode,
 } from "@/types";
 
 /**
@@ -224,6 +226,33 @@ export function getConnectedInputsPure(
         } else if (edgeType === "easeCurve") {
           if (switchInputs.easeCurve) easeCurve = switchInputs.easeCurve;
         }
+        return; // Skip normal getSourceOutput processing
+      }
+
+      // Conditional Switch passthrough — traverse upstream if output is active (matched or default)
+      if (sourceNode.type === "conditionalSwitch") {
+        const condData = sourceNode.data as ConditionalSwitchNodeData;
+        const sourceHandle = edge.sourceHandle;
+
+        // Find matching rule or check if default
+        const rule = condData.rules.find(r => r.id === sourceHandle);
+        const isDefaultHandle = sourceHandle === "default";
+
+        // Determine if this output is active
+        let isActive = false;
+        if (rule) {
+          isActive = rule.isMatched;
+        } else if (isDefaultHandle) {
+          // Default is active when NO rules match
+          isActive = !condData.rules.some(r => r.isMatched);
+        }
+
+        // Block non-active outputs (data does not flow through non-matching rules)
+        if (!isActive) return;
+
+        // Active output: recursively get upstream text
+        const condInputs = getConnectedInputsPure(sourceNode.id, nodes, edges, _visited, dimmedNodeIds);
+        if (condInputs.text) text = condInputs.text;
         return; // Skip normal getSourceOutput processing
       }
 
