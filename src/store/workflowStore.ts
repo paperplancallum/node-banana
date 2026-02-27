@@ -23,6 +23,7 @@ import {
   ProviderSettings,
   RecentModel,
   CanvasNavigationSettings,
+  MatchMode,
   MODEL_DISPLAY_NAMES,
 } from "@/types";
 import { useToast } from "@/components/Toast";
@@ -59,6 +60,7 @@ import {
   clearNodeImageRefs,
 } from "./utils/executionUtils";
 import { getConnectedInputsPure, validateWorkflowPure } from "./utils/connectedInputs";
+import { evaluateRule } from "./utils/ruleEvaluation";
 import { computeDimmedNodes } from "./utils/dimmingUtils";
 import {
   executeAnnotation,
@@ -86,42 +88,6 @@ import {
 import type { NodeExecutionContext } from "./execution";
 export type { LevelGroup } from "./utils/executionUtils";
 export { CONCURRENCY_SETTINGS_KEY } from "./utils/executionUtils";
-
-/**
- * Evaluates a rule against incoming text with the specified match mode.
- * Returns true if any comma-separated value matches using OR logic.
- */
-function evaluateRuleMatch(text: string | null, ruleValue: string, mode: "exact" | "contains" | "starts-with" | "ends-with"): boolean {
-  // Guard: no match if text or ruleValue is empty
-  if (!text || !ruleValue) return false;
-
-  // Normalize text
-  const normalizedText = text.toLowerCase().trim();
-
-  // Split and normalize rule values (comma-separated)
-  const values = ruleValue
-    .split(',')
-    .map(v => v.toLowerCase().trim())
-    .filter(v => v.length > 0);
-
-  if (values.length === 0) return false;
-
-  // OR logic: match if ANY value matches
-  return values.some(value => {
-    switch (mode) {
-      case "exact":
-        return normalizedText === value;
-      case "contains":
-        return normalizedText.includes(value);
-      case "starts-with":
-        return normalizedText.startsWith(value);
-      case "ends-with":
-        return normalizedText.endsWith(value);
-      default:
-        return false;
-    }
-  });
-}
 
 function saveLogSession(): void {
   const session = logger.getCurrentSession();
@@ -1099,7 +1065,7 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
 
             // Evaluate each rule against incoming text
             const updatedRules = nodeData.rules.map(rule => {
-              const isMatched = evaluateRuleMatch(incomingText, rule.value, rule.mode as "exact" | "contains" | "starts-with" | "ends-with");
+              const isMatched = evaluateRule(incomingText, rule.value, rule.mode as MatchMode);
               return { ...rule, isMatched };
             });
 
@@ -1445,7 +1411,7 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
 
           // Evaluate each rule against incoming text
           const updatedRules = nodeData.rules.map(rule => {
-            const isMatched = evaluateRuleMatch(incomingText, rule.value, rule.mode as "exact" | "contains" | "starts-with" | "ends-with");
+            const isMatched = evaluateRule(incomingText, rule.value, rule.mode as MatchMode);
             return { ...rule, isMatched };
           });
 
