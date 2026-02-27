@@ -305,8 +305,6 @@ export const createDefaultNodeData = (type: NodeType): WorkflowNodeData => {
       } as SwitchNodeData;
     case "conditionalSwitch":
       return {
-        customTitle: null,
-        comment: null,
         incomingText: null,
         rules: [
           {
