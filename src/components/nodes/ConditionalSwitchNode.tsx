@@ -1,26 +1,27 @@
 "use client";
 
 import { memo, useMemo, useEffect, useLayoutEffect, useState, useCallback, useRef } from "react";
-import { Handle, Position, useUpdateNodeInternals, useReactFlow, NodeProps, useEdges } from "@xyflow/react";
+import { Handle, Position, useUpdateNodeInternals, useReactFlow, NodeProps } from "@xyflow/react";
 import { BaseNode } from "./BaseNode";
 import { useWorkflowStore } from "@/store/workflowStore";
 import { evaluateRule } from "@/store/utils/ruleEvaluation";
+import { getConnectedInputsPure } from "@/store/utils/connectedInputs";
 import type { WorkflowNode, ConditionalSwitchNodeData, ConditionalSwitchRule, MatchMode } from "@/types";
 
 export const ConditionalSwitchNode = memo(({ id, data, selected }: NodeProps<WorkflowNode>) => {
   const nodeData = data as ConditionalSwitchNodeData;
-  const edges = useEdges();
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
-  const getConnectedInputs = useWorkflowStore((state) => state.getConnectedInputs);
   const updateNodeInternals = useUpdateNodeInternals();
   const { setNodes, setEdges } = useReactFlow();
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  // Get incoming text from connected edges
-  const incomingText = useMemo(() => {
-    const { text } = getConnectedInputs(id);
-    return text;
-  }, [edges, id, getConnectedInputs]);
+  // Get incoming text via store selector so it recomputes when upstream node data changes
+  // (useMemo with edges as dependency missed upstream data changes, causing stale evaluations)
+  const incomingText = useWorkflowStore(
+    useCallback((state) =>
+      getConnectedInputsPure(id, state.nodes, state.edges, undefined, state.dimmedNodeIds).text,
+    [id])
+  );
 
   // Evaluate all rules and update match status
   useEffect(() => {
