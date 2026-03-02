@@ -14,6 +14,7 @@ const MODELS_CACHE_TTL = 48 * 60 * 60 * 1000; // 48 hours
 
 interface ModelsCacheEntry {
   models: ProviderModel[];
+  availableProviders?: string[];
   timestamp: number;
 }
 
@@ -30,10 +31,10 @@ function getCachedModels(cacheKey: string): ModelsCacheEntry | null {
   return null;
 }
 
-function setCachedModels(cacheKey: string, models: ProviderModel[]) {
+function setCachedModels(cacheKey: string, models: ProviderModel[], availableProviders?: string[]) {
   try {
     const cache = JSON.parse(localStorage.getItem(MODELS_CACHE_KEY) || "{}");
-    cache[cacheKey] = { models, timestamp: Date.now() };
+    cache[cacheKey] = { models, availableProviders, timestamp: Date.now() };
     localStorage.setItem(MODELS_CACHE_KEY, JSON.stringify(cache));
   } catch {
     // Ignore cache errors
@@ -183,6 +184,9 @@ export function ModelSearchDialog({
       const cached = getCachedModels(cacheKey);
       if (cached) {
         setModels(cached.models);
+        if (cached.availableProviders) {
+          setServerAvailableProviders(cached.availableProviders);
+        }
         return;
       }
     }
@@ -242,8 +246,8 @@ export function ModelSearchDialog({
 
       if (data.success && data.models) {
         setModels(data.models);
-        // Cache the successful result
-        setCachedModels(cacheKey, data.models);
+        // Cache the successful result (including available providers)
+        setCachedModels(cacheKey, data.models, data.availableProviders);
         // Update server-reported available providers
         if (data.availableProviders) {
           setServerAvailableProviders(data.availableProviders);
