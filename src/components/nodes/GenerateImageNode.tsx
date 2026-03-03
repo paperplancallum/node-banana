@@ -494,7 +494,7 @@ export function GenerateImageNode({ id, data, selected }: NodeProps<NanoBananaNo
         type="target"
         position={Position.Left}
         id="image"
-        style={{ top: "35%" }}
+        style={{ top: "35%", zIndex: 10 }}
         data-handletype="image"
         isConnectable={true}
       />
@@ -505,6 +505,7 @@ export function GenerateImageNode({ id, data, selected }: NodeProps<NanoBananaNo
           right: `calc(100% + 8px)`,
           top: "calc(35% - 18px)",
           color: "var(--handle-color-image)",
+          zIndex: 10,
         }}
       >
         Image
@@ -513,7 +514,7 @@ export function GenerateImageNode({ id, data, selected }: NodeProps<NanoBananaNo
         type="target"
         position={Position.Left}
         id="text"
-        style={{ top: "65%" }}
+        style={{ top: "65%", zIndex: 10 }}
         data-handletype="text"
         isConnectable={true}
       />
@@ -524,6 +525,7 @@ export function GenerateImageNode({ id, data, selected }: NodeProps<NanoBananaNo
           right: `calc(100% + 8px)`,
           top: "calc(65% - 18px)",
           color: "var(--handle-color-text)",
+          zIndex: 10,
         }}
       >
         Prompt
@@ -533,7 +535,7 @@ export function GenerateImageNode({ id, data, selected }: NodeProps<NanoBananaNo
         type="source"
         position={Position.Right}
         id="image"
-        style={{ top: "50%" }}
+        style={{ top: "50%", zIndex: 10 }}
         data-handletype="image"
       />
       {/* Output label */}
@@ -543,6 +545,7 @@ export function GenerateImageNode({ id, data, selected }: NodeProps<NanoBananaNo
           left: `calc(100% + 8px)`,
           top: "calc(50% - 18px)",
           color: "var(--handle-color-image)",
+          zIndex: 10,
         }}
       >
         Image
