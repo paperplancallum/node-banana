@@ -824,6 +824,11 @@ function EaseCurveControls({ node }: { node: Node }) {
     [node.id, updateNodeData]
   );
 
+  const editorEasingCurve = useMemo(() => {
+    if (!nodeData.easingPreset) return undefined;
+    return generateEasingPolyline(nodeData.easingPreset, 100, 100, 50);
+  }, [nodeData.easingPreset]);
+
   const presetThumbnails = useMemo(() => {
     return ALL_EASING_NAMES.map((name) => ({
       name,
@@ -849,6 +854,7 @@ function EaseCurveControls({ node }: { node: Node }) {
           value={nodeData.bezierHandles || [0.42, 0, 0.58, 1]}
           onChange={handleBezierChange}
           onCommit={handleBezierChange}
+          easingCurve={editorEasingCurve}
         />
         {nodeData.easingPreset && (
           <div className="text-xs text-neutral-400 mt-1">
