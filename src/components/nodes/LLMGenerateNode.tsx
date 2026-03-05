@@ -106,14 +106,14 @@ export function LLMGenerateNode({ id, data, selected }: NodeProps<LLMGenerateNod
             <span className="text-white text-xs font-medium">Generation failed</span>
           </div>
         ) : nodeData.outputText ? (
-          <div className="relative w-full h-full bg-neutral-900/40 p-2 overflow-auto nodrag nopan nowheel">
-            <p className="text-[10px] text-neutral-300 whitespace-pre-wrap break-words pr-6">
+          <div className="group/text relative w-full h-full bg-neutral-900/40 p-2 overflow-auto nowheel">
+            <p className="text-[10px] text-neutral-300 whitespace-pre-wrap break-words">
               {nodeData.outputText}
             </p>
-            <div className="absolute top-1 right-1 flex gap-1">
+            <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover/text:opacity-100 transition-opacity">
               <button
                 onClick={handleCopyOutput}
-                className={`w-5 h-5 ${copied ? "bg-green-600/80" : "bg-neutral-900/80 hover:bg-neutral-700/80"} rounded flex items-center justify-center text-neutral-400 hover:text-white transition-colors`}
+                className={`nodrag nopan w-5 h-5 ${copied ? "bg-green-600/80" : "bg-neutral-900/80 hover:bg-neutral-700/80"} rounded flex items-center justify-center text-neutral-400 hover:text-white transition-colors`}
                 title={copied ? "Copied!" : "Copy to clipboard"}
               >
                 {copied ? (
@@ -129,7 +129,7 @@ export function LLMGenerateNode({ id, data, selected }: NodeProps<LLMGenerateNod
               <button
                 onClick={handleRegenerate}
                 disabled={isRunning}
-                className="w-5 h-5 bg-neutral-900/80 hover:bg-blue-600/80 disabled:opacity-50 disabled:cursor-not-allowed rounded flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
+                className="nodrag nopan w-5 h-5 bg-neutral-900/80 hover:bg-blue-600/80 disabled:opacity-50 disabled:cursor-not-allowed rounded flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
                 title="Regenerate"
               >
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -138,7 +138,7 @@ export function LLMGenerateNode({ id, data, selected }: NodeProps<LLMGenerateNod
               </button>
               <button
                 onClick={handleClearOutput}
-                className="w-5 h-5 bg-neutral-900/80 hover:bg-red-600/80 rounded flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
+                className="nodrag nopan w-5 h-5 bg-neutral-900/80 hover:bg-red-600/80 rounded flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
                 title="Clear output"
               >
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
