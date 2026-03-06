@@ -183,6 +183,8 @@ function getNodeTypeTitle(type: NodeType): string {
 function GenerateImageControls({ node }: { node: Node }) {
   const nodeData = node.data as NanoBananaNodeData;
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
+  const regenerateNode = useWorkflowStore((state) => state.regenerateNode);
+  const isRunning = useWorkflowStore((state) => state.isRunning);
   const { replicateApiKey, falApiKey, kieApiKey, replicateEnabled, kieEnabled } = useProviderApiKeys();
   const [externalModels, setExternalModels] = useState<ProviderModel[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
@@ -480,6 +482,14 @@ function GenerateImageControls({ node }: { node: Node }) {
         )}
       </div>
 
+      <button
+        onClick={() => regenerateNode(node.id)}
+        disabled={isRunning}
+        className="nodrag nopan w-full py-2 text-xs font-medium bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:pointer-events-none rounded text-white transition-colors"
+      >
+        {isRunning ? "Running..." : "Run"}
+      </button>
+
       {isBrowseDialogOpen && (
         <ModelSearchDialog
           isOpen={isBrowseDialogOpen}
@@ -496,6 +506,8 @@ function GenerateImageControls({ node }: { node: Node }) {
 function GenerateVideoControls({ node }: { node: Node }) {
   const nodeData = node.data as GenerateVideoNodeData;
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
+  const regenerateNode = useWorkflowStore((state) => state.regenerateNode);
+  const isRunning = useWorkflowStore((state) => state.isRunning);
   const [isBrowseDialogOpen, setIsBrowseDialogOpen] = useState(false);
 
   const currentProvider: ProviderType = nodeData.selectedModel?.provider || "fal";
@@ -571,6 +583,14 @@ function GenerateVideoControls({ node }: { node: Node }) {
         )}
       </div>
 
+      <button
+        onClick={() => regenerateNode(node.id)}
+        disabled={isRunning}
+        className="nodrag nopan w-full py-2 text-xs font-medium bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:pointer-events-none rounded text-white transition-colors"
+      >
+        {isRunning ? "Running..." : "Run"}
+      </button>
+
       {isBrowseDialogOpen && (
         <ModelSearchDialog
           isOpen={isBrowseDialogOpen}
@@ -587,6 +607,8 @@ function GenerateVideoControls({ node }: { node: Node }) {
 function Generate3DControls({ node }: { node: Node }) {
   const nodeData = node.data as Generate3DNodeData;
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
+  const regenerateNode = useWorkflowStore((state) => state.regenerateNode);
+  const isRunning = useWorkflowStore((state) => state.isRunning);
   const [isBrowseDialogOpen, setIsBrowseDialogOpen] = useState(false);
 
   const currentProvider: ProviderType = nodeData.selectedModel?.provider || "fal";
@@ -664,6 +686,14 @@ function Generate3DControls({ node }: { node: Node }) {
         )}
       </div>
 
+      <button
+        onClick={() => regenerateNode(node.id)}
+        disabled={isRunning}
+        className="nodrag nopan w-full py-2 text-xs font-medium bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:pointer-events-none rounded text-white transition-colors"
+      >
+        {isRunning ? "Running..." : "Run"}
+      </button>
+
       {isBrowseDialogOpen && (
         <ModelSearchDialog
           isOpen={isBrowseDialogOpen}
@@ -676,11 +706,23 @@ function Generate3DControls({ node }: { node: Node }) {
   );
 }
 
-// Generate Audio Controls (simplified placeholder - similar pattern to video/3d)
+// Generate Audio Controls
 function GenerateAudioControls({ node }: { node: Node }) {
+  const regenerateNode = useWorkflowStore((state) => state.regenerateNode);
+  const isRunning = useWorkflowStore((state) => state.isRunning);
+
   return (
-    <div className="text-xs text-neutral-400">
-      Audio controls coming in full implementation
+    <div className="space-y-3">
+      <div className="text-xs text-neutral-400">
+        Audio generation settings
+      </div>
+      <button
+        onClick={() => regenerateNode(node.id)}
+        disabled={isRunning}
+        className="nodrag nopan w-full py-2 text-xs font-medium bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:pointer-events-none rounded text-white transition-colors"
+      >
+        {isRunning ? "Running..." : "Run"}
+      </button>
     </div>
   );
 }
@@ -689,6 +731,8 @@ function GenerateAudioControls({ node }: { node: Node }) {
 function LLMControls({ node }: { node: Node }) {
   const nodeData = node.data as LLMGenerateNodeData;
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
+  const regenerateNode = useWorkflowStore((state) => state.regenerateNode);
+  const isRunning = useWorkflowStore((state) => state.isRunning);
 
   const handleProviderChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -787,6 +831,14 @@ function LLMControls({ node }: { node: Node }) {
           className="nodrag nopan w-full h-1 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
         />
       </div>
+
+      <button
+        onClick={() => regenerateNode(node.id)}
+        disabled={isRunning}
+        className="nodrag nopan w-full py-2 text-xs font-medium bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:pointer-events-none rounded text-white transition-colors"
+      >
+        {isRunning ? "Running..." : "Run"}
+      </button>
     </div>
   );
 }
@@ -795,6 +847,8 @@ function LLMControls({ node }: { node: Node }) {
 function EaseCurveControls({ node }: { node: Node }) {
   const nodeData = node.data as EaseCurveNodeData;
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
+  const regenerateNode = useWorkflowStore((state) => state.regenerateNode);
+  const isRunning = useWorkflowStore((state) => state.isRunning);
   const [showPresets, setShowPresets] = useState(false);
   const presetsButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -877,6 +931,14 @@ function EaseCurveControls({ node }: { node: Node }) {
           className="nodrag nopan w-full px-2 py-1 text-xs bg-neutral-700 border border-neutral-600 rounded text-neutral-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </div>
+
+      <button
+        onClick={() => regenerateNode(node.id)}
+        disabled={isRunning}
+        className="nodrag nopan w-full py-2 text-xs font-medium bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:pointer-events-none rounded text-white transition-colors"
+      >
+        {isRunning ? "Applying..." : "Apply"}
+      </button>
 
       {showPresets && typeof document !== 'undefined' && createPortal(
         <div
