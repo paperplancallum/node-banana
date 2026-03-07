@@ -1,9 +1,11 @@
 "use client";
 
 import { ReactNode, useCallback } from "react";
-import { NodeResizer, OnResize, useReactFlow } from "@xyflow/react";
+import { Node, NodeResizer, OnResize, useReactFlow } from "@xyflow/react";
 import { useWorkflowStore } from "@/store/workflowStore";
 import { getMediaDimensions, calculateAspectFitSize } from "@/utils/nodeDimensions";
+
+const DEFAULT_NODE_DIMENSION = 300;
 
 interface BaseNodeProps {
   id: string;
@@ -21,6 +23,33 @@ interface BaseNodeProps {
   aspectFitMedia?: string | null;
 }
 
+/**
+ * Read a node's effective width or height, respecting React Flow's internal
+ * priority: node.width > node.style.width > node.measured.width.
+ */
+function getNodeDimension(node: Node, axis: "width" | "height"): number {
+  return (
+    (node[axis] as number) ??
+    (node.style?.[axis] as number) ??
+    (node.measured?.[axis] as number) ??
+    DEFAULT_NODE_DIMENSION
+  );
+}
+
+/**
+ * Apply dimensions to a React Flow node, writing to both `node.width/height`
+ * (where NodeResizer writes) and `node.style` (the original source) so neither
+ * silently overrides the other.
+ */
+function applyNodeDimensions(node: Node, width: number, height: number): Node {
+  return {
+    ...node,
+    width,
+    height,
+    style: { ...node.style, width, height },
+  };
+}
+
 export function BaseNode({
   id,
   children,
@@ -35,41 +64,24 @@ export function BaseNode({
   aspectFitMedia,
 }: BaseNodeProps) {
   const currentNodeIds = useWorkflowStore((state) => state.currentNodeIds);
-  const nodes = useWorkflowStore((state) => state.nodes);
   const setHoveredNodeId = useWorkflowStore((state) => state.setHoveredNodeId);
   const isCurrentlyExecuting = currentNodeIds.includes(id);
   const { getNodes, setNodes } = useReactFlow();
 
-  // Synchronize resize across all selected nodes
   const handleResize: OnResize = useCallback(
-    (event, params) => {
-      const allNodes = getNodes();
-      const selectedNodes = allNodes.filter((node) => node.selected && node.id !== id);
-
-      if (selectedNodes.length > 0) {
-        setNodes((nodes) =>
-          nodes.map((node) => {
-            if (node.selected && node.id !== id) {
-              return {
-                ...node,
-                style: {
-                  ...node.style,
-                  width: params.width,
-                  height: params.height,
-                },
-              };
-            }
-            return node;
-          })
-        );
-      }
+    (_event, params) => {
+      setNodes((nodes) =>
+        nodes.map((node) => {
+          if (node.selected && node.id !== id) {
+            return applyNodeDimensions(node, params.width, params.height);
+          }
+          return node;
+        })
+      );
     },
-    [id, getNodes, setNodes]
+    [id, setNodes]
   );
 
-  // Double-click resize handle → aspect-fit to media
-  // Uses React synthetic event on a `display: contents` wrapper so it stays
-  // in sync across React Flow re-renders (imperative DOM listeners break after manual resize).
   const handleResizeHandleDblClick = useCallback(
     async (e: React.MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -80,36 +92,20 @@ export function BaseNode({
       const dims = await getMediaDimensions(aspectFitMedia);
       if (!dims) return;
 
-      const aspectRatio = dims.width / dims.height;
-      const allNodes = getNodes();
-      const thisNode = allNodes.find((n) => n.id === id);
+      const thisNode = getNodes().find((n) => n.id === id);
       if (!thisNode) return;
 
-      const currentWidth =
-        (thisNode.style?.width as number) ??
-        (thisNode.measured?.width as number) ??
-        thisNode.width ??
-        300;
-      const currentHeight =
-        (thisNode.style?.height as number) ??
-        (thisNode.measured?.height as number) ??
-        thisNode.height ??
-        300;
-
       const newSize = calculateAspectFitSize(
-        aspectRatio,
-        currentWidth,
-        currentHeight,
+        dims.width / dims.height,
+        getNodeDimension(thisNode, "width"),
+        getNodeDimension(thisNode, "height"),
         fullBleed
       );
 
       setNodes((nds) =>
         nds.map((n) => {
           if (n.id === id || (n.selected && n.id !== id)) {
-            return {
-              ...n,
-              style: { ...n.style, width: newSize.width, height: newSize.height },
-            };
+            return applyNodeDimensions(n, newSize.width, newSize.height);
           }
           return n;
         })
