@@ -728,16 +728,25 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
     });
 
     // Create new nodes with updated IDs and offset positions
-    const newNodes: WorkflowNode[] = clipboard.nodes.map((node) => ({
-      ...node,
-      id: idMapping.get(node.id)!,
-      position: {
-        x: node.position.x + offset.x,
-        y: node.position.y + offset.y,
-      },
-      selected: true, // Select newly pasted nodes
-      data: JSON.parse(JSON.stringify(node.data)),
-    }));
+    const newNodes: WorkflowNode[] = clipboard.nodes.map((node) => {
+      const defaults = defaultNodeDimensions[node.type as NodeType] || { width: 300, height: 280 };
+      return {
+        ...node,
+        id: idMapping.get(node.id)!,
+        position: {
+          x: node.position.x + offset.x,
+          y: node.position.y + offset.y,
+        },
+        selected: true, // Select newly pasted nodes
+        // Reset height to defaults so BaseNode's ResizeObserver
+        // can correctly add settings panel height from the right baseline
+        style: { width: node.style?.width ?? defaults.width, height: defaults.height },
+        width: undefined,
+        height: undefined,
+        measured: undefined,
+        data: JSON.parse(JSON.stringify(node.data)),
+      };
+    });
 
     // Create new edges with updated source/target IDs
     const newEdges: WorkflowEdge[] = clipboard.edges.map((edge) => ({
