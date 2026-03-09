@@ -1727,6 +1727,8 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
       useExternalImageStorage: savedConfig?.useExternalImageStorage ?? true,
       // Reset viewed comments when loading new workflow
       viewedCommentNodeIds: new Set<string>(),
+      // Dismiss welcome modal after loading a workflow
+      showQuickstart: false,
     });
 
     // Clear snapshot unless explicitly preserving (e.g., AI workflow generation)
