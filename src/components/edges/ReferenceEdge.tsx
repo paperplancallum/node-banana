@@ -24,9 +24,9 @@ export function ReferenceEdge({
 }: EdgeProps) {
   // Narrow selector: returns boolean, only re-renders when selection relevance changes
   const isConnectedToSelection = useWorkflowStore((state) => {
-    const selected = state.nodes.filter((n) => n.selected);
-    if (selected.length === 0) return false;
-    return selected.some((n) => n.id === source || n.id === target);
+    const selectedNodes = state.nodes.filter((n) => n.selected);
+    if (selectedNodes.length === 0) return false;
+    return selectedNodes.some((n) => n.id === source || n.id === target);
   });
 
   // Calculate the path - always use curved for reference edges for softer look
