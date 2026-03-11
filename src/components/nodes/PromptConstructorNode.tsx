@@ -1,13 +1,11 @@
 "use client";
 
 import { useCallback, useState, useEffect, useMemo, useRef } from "react";
-import { createPortal } from "react-dom";
 import { Handle, Position, NodeProps, Node } from "@xyflow/react";
 import { BaseNode } from "./BaseNode";
 import { usePromptAutocomplete } from "@/hooks/usePromptAutocomplete";
 import { useWorkflowStore } from "@/store/workflowStore";
 import { PromptConstructorNodeData, PromptNodeData, LLMGenerateNodeData, AvailableVariable } from "@/types";
-import { PromptConstructorEditorModal } from "@/components/modals/PromptConstructorEditorModal";
 import { parseVarTags } from "@/utils/parseVarTags";
 
 type PromptConstructorNodeType = Node<PromptConstructorNodeData, "promptConstructor">;
@@ -17,13 +15,10 @@ export function PromptConstructorNode({ id, data, selected }: NodeProps<PromptCo
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData);
   const edges = useWorkflowStore((state) => state.edges);
   const nodes = useWorkflowStore((state) => state.nodes);
-  const incrementModalCount = useWorkflowStore((state) => state.incrementModalCount);
-  const decrementModalCount = useWorkflowStore((state) => state.decrementModalCount);
 
   // Local state for template to prevent cursor jumping
   const [localTemplate, setLocalTemplate] = useState(nodeData.template);
   const [isEditing, setIsEditing] = useState(false);
-  const [isModalOpenLocal, setIsModalOpenLocal] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -158,23 +153,6 @@ export function PromptConstructorNode({ id, data, selected }: NodeProps<PromptCo
     setTimeout(() => closeAutocomplete(), 200);
   }, [id, localTemplate, nodeData.template, updateNodeData, closeAutocomplete]);
 
-  const handleOpenModal = useCallback(() => {
-    setIsModalOpenLocal(true);
-    incrementModalCount();
-  }, [incrementModalCount]);
-
-  const handleCloseModal = useCallback(() => {
-    setIsModalOpenLocal(false);
-    decrementModalCount();
-  }, [decrementModalCount]);
-
-  const handleSubmitModal = useCallback(
-    (template: string) => {
-      updateNodeData(id, { template });
-    },
-    [id, updateNodeData]
-  );
-
   return (
     <>
       <BaseNode
@@ -260,18 +238,6 @@ export function PromptConstructorNode({ id, data, selected }: NodeProps<PromptCo
           style={{ zIndex: 10 }}
         />
       </BaseNode>
-
-      {/* Prompt Constructor Editor Modal - rendered via portal to escape React Flow stacking context */}
-      {isModalOpenLocal && createPortal(
-        <PromptConstructorEditorModal
-          isOpen={isModalOpenLocal}
-          initialTemplate={nodeData.template}
-          availableVariables={availableVariables}
-          onSubmit={handleSubmitModal}
-          onClose={handleCloseModal}
-        />,
-        document.body
-      )}
     </>
   );
 }
