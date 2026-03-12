@@ -231,3 +231,6 @@ All routes in `src/app/api/`:
 - Each commit should be atomic and self-contained: one task = one commit.
 - The .planning directory is untracked, do not attempt to commit any changes to the files in this directory.
 
+## Web Crawling
+- Always use `cf crawl` when needing to crawl or fetch website content.
+
