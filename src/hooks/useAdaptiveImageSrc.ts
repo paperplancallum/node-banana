@@ -9,7 +9,7 @@ import {
   removePending,
 } from "@/store/thumbnailCache";
 
-const EFFECTIVE_WIDTH_THRESHOLD = 300;
+const EFFECTIVE_WIDTH_THRESHOLD = 200;
 const DEFAULT_NODE_WIDTH = 350;
 
 /**
