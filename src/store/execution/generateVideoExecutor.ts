@@ -8,6 +8,7 @@
 import type { GenerateVideoNodeData } from "@/types";
 import { buildGenerateHeaders } from "@/store/utils/buildApiHeaders";
 import type { NodeExecutionContext } from "./types";
+import { compressImagesForUpload } from "@/utils/imageCompression";
 
 export interface GenerateVideoOptions {
   /** When true, falls back to stored inputImages/inputPrompt if no connections provide them. */
@@ -87,12 +88,32 @@ export async function executeGenerateVideo(
   const provider = nodeData.selectedModel.provider;
   const headers = buildGenerateHeaders(provider, providerSettings);
 
+  // Compress images to fit within Vercel's 4.5MB payload limit
+  const compressedImages = images.length > 0 ? await compressImagesForUpload(images) : [];
+
+  // Also compress any images in dynamicInputs
+  const compressedDynamicInputs: Record<string, string | string[]> = {};
+  for (const [key, value] of Object.entries(dynamicInputs)) {
+    if (typeof value === "string" && value.startsWith("data:image")) {
+      compressedDynamicInputs[key] = await compressImagesForUpload([value]).then(arr => arr[0]);
+    } else if (Array.isArray(value)) {
+      const hasImages = value.some(v => typeof v === "string" && v.startsWith("data:image"));
+      if (hasImages) {
+        compressedDynamicInputs[key] = await compressImagesForUpload(value);
+      } else {
+        compressedDynamicInputs[key] = value;
+      }
+    } else {
+      compressedDynamicInputs[key] = value;
+    }
+  }
+
   const requestPayload = {
-    images,
+    images: compressedImages,
     prompt: text,
     selectedModel: nodeData.selectedModel,
     parameters: nodeData.parameters,
-    dynamicInputs,
+    dynamicInputs: compressedDynamicInputs,
     mediaType: "video" as const,
   };
 
