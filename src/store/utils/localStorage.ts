@@ -19,6 +19,7 @@ export const PROVIDER_SETTINGS_KEY = "node-banana-provider-settings";
 export const RECENT_MODELS_KEY = "node-banana-recent-models";
 export const NODE_DEFAULTS_KEY = "node-banana-node-defaults";
 export const CANVAS_NAVIGATION_KEY = "node-banana-canvas-navigation";
+export const WEB_WORKFLOWS_KEY = "node-banana-web-workflows";
 
 // Maximum recent models to store (show 4 in UI, keep 8 for persistence)
 export const MAX_RECENT_MODELS = 8;
@@ -219,6 +220,53 @@ export const saveCanvasNavigationSettings = (settings: CanvasNavigationSettings)
 // Workflow ID generator
 export const generateWorkflowId = (): string =>
   `wf_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+// Web workflow storage (for web deployments without file system access)
+export interface WebWorkflowData {
+  id: string;
+  name: string;
+  nodes: unknown[];
+  edges: unknown[];
+  viewport?: { x: number; y: number; zoom: number };
+  updatedAt: number;
+}
+
+export const getWebWorkflows = (): Record<string, WebWorkflowData> => {
+  if (typeof window === "undefined") return {};
+  const stored = localStorage.getItem(WEB_WORKFLOWS_KEY);
+  if (stored) {
+    try {
+      return JSON.parse(stored) as Record<string, WebWorkflowData>;
+    } catch {
+      return {};
+    }
+  }
+  return {};
+};
+
+export const saveWebWorkflow = (workflow: WebWorkflowData): void => {
+  if (typeof window === "undefined") return;
+  const workflows = getWebWorkflows();
+  workflows[workflow.id] = { ...workflow, updatedAt: Date.now() };
+  localStorage.setItem(WEB_WORKFLOWS_KEY, JSON.stringify(workflows));
+};
+
+export const loadWebWorkflow = (id: string): WebWorkflowData | null => {
+  const workflows = getWebWorkflows();
+  return workflows[id] || null;
+};
+
+export const deleteWebWorkflow = (id: string): void => {
+  if (typeof window === "undefined") return;
+  const workflows = getWebWorkflows();
+  delete workflows[id];
+  localStorage.setItem(WEB_WORKFLOWS_KEY, JSON.stringify(workflows));
+};
+
+export const listWebWorkflows = (): WebWorkflowData[] => {
+  const workflows = getWebWorkflows();
+  return Object.values(workflows).sort((a, b) => b.updatedAt - a.updatedAt);
+};
 
 /**
  * @deprecated Backward-compatible alias. Use `GenerateImageDefaults` instead.

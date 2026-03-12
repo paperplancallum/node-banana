@@ -44,6 +44,8 @@ import {
   generateWorkflowId,
   getCanvasNavigationSettings,
   saveCanvasNavigationSettings,
+  saveWebWorkflow,
+  loadWebWorkflow,
 } from "./utils/localStorage";
 import {
   createDefaultNodeData,
@@ -2030,6 +2032,11 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
   initializeAutoSave: () => {
     if (autoSaveIntervalId) return;
 
+    // Detect web deployment
+    const isWebDeployment = typeof window !== "undefined" &&
+      !window.location.hostname.includes("localhost") &&
+      !window.location.hostname.includes("127.0.0.1");
+
     autoSaveIntervalId = setInterval(async () => {
       const state = get();
       if (
@@ -2037,10 +2044,22 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
         state.hasUnsavedChanges &&
         state.workflowId &&
         state.workflowName &&
-        state.saveDirectoryPath &&
         !state.isSaving
       ) {
-        await state.saveToFile();
+        if (isWebDeployment) {
+          // Save to localStorage for web deployments
+          saveWebWorkflow({
+            id: state.workflowId,
+            name: state.workflowName,
+            nodes: state.nodes.map(({ selected, ...rest }) => rest),
+            edges: state.edges,
+            updatedAt: Date.now(),
+          });
+          set({ hasUnsavedChanges: false });
+        } else if (state.saveDirectoryPath) {
+          // Save to file system for local deployments
+          await state.saveToFile();
+        }
       }
     }, 90 * 1000); // 90 seconds
   },
